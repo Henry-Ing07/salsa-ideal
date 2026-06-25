@@ -2,49 +2,96 @@
 {% block title %}Factura {{ factura.numero_factura }}{% endblock %}
 {% block page_title %}Factura {{ factura.numero_factura }}{% endblock %}
 
+{% block extra_css %}
+<style>
+  @media print {
+    body * { visibility: hidden; }
+    #ticket, #ticket * { visibility: visible; }
+    #ticket { position: fixed; top: 0; left: 0; }
+    .d-print-none { display: none !important; }
+  }
+
+  #ticket {
+    width: 80mm;
+    max-width: 80mm;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    margin: 0 auto;
+    padding: 8px;
+    background: #fff;
+    color: #000;
+  }
+  #ticket .ticket-center { text-align: center; }
+  #ticket .ticket-bold { font-weight: bold; }
+  #ticket .ticket-linea { border-top: 1px dashed #000; margin: 6px 0; }
+  #ticket .ticket-row { display: flex; justify-content: space-between; }
+  #ticket .ticket-total { font-size: 15px; font-weight: bold; }
+  #ticket table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #ticket table td { padding: 2px 0; vertical-align: top; }
+  #ticket table td:last-child { text-align: right; white-space: nowrap; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card-ideal mx-auto" style="max-width:720px;" id="factura-imprimible">
-  <div class="card-body p-4">
-    <div class="d-flex justify-content-between align-items-start mb-4">
-      <div>
-        <img src="{{ url_for('static', filename='img/logo-ideal.png') }}" style="width:90px;">
-        <h5 class="mt-2 mb-0 brand-text-rojo fw-bold">{{ empresa_nombre }}</h5>
-        <p class="text-muted small mb-0">Cúcuta, Norte de Santander, Colombia</p>
-      </div>
-      <div class="text-end">
-        <h5 class="fw-bold">Factura</h5>
-        <p class="mb-0">N°: <b>{{ factura.numero_factura }}</b></p>
-        <p class="mb-0 text-muted">{{ factura.fecha.strftime('%Y-%m-%d %H:%M') }}</p>
-      </div>
-    </div>
+<div class="d-print-none text-center mb-3">
+  <button onclick="window.print()" class="btn btn-ideal">
+    <i class="fa-solid fa-print me-1"></i> Imprimir ticket
+  </button>
+  <a href="{{ url_for('facturas.descargar_pdf', factura_id=factura.id) }}" class="btn btn-ideal-outline">
+    <i class="fa-solid fa-file-pdf me-1"></i> Descargar PDF
+  </a>
+  <a href="{{ url_for('facturas.listar') }}" class="btn btn-light">Volver</a>
+</div>
 
-    <p><b>Cliente:</b> {{ factura.cliente }}</p>
-    <p><b>Atendido por:</b> {{ factura.vendedor_nombre or 'N/A' }} <span class="text-muted small">({{ factura.vendedor_rol or '' }})</span></p>
+<div id="ticket">
+  <div class="ticket-center">
+    <img src="{{ url_for('static', filename='img/logo-ideal.png') }}" style="width:60px; display:block; margin:0 auto 4px;">
+    <div class="ticket-bold" style="font-size:14px;">{{ empresa_nombre }}</div>
+    <div>NIT: {{ config.EMPRESA_NIT if config else '900.000.000-1' }}</div>
+    <div>Cúcuta, Norte de Santander</div>
+  </div>
 
-    <table class="table table-ideal">
-      <thead><tr><th>Producto</th><th class="text-center">Cantidad</th><th class="text-end">Precio Unit.</th><th class="text-end">Subtotal</th></tr></thead>
-      <tbody>
-        {% for it in factura.get('items', []) %}
-        <tr><td>{{ it.producto_nombre }}</td><td class="text-center">{{ it.cantidad }}</td><td class="text-end">${{ it.precio|moneda }}</td><td class="text-end">${{ (it.precio*it.cantidad)|moneda }}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="ticket-linea"></div>
 
-    <div class="text-end">
-      <p class="mb-1">Subtotal: ${{ factura.subtotal|moneda }}</p>
-      <p class="mb-1">Descuento: ${{ factura.descuento|moneda }}</p>
-      <h5 class="brand-text-rojo">Total: ${{ factura.total|moneda }}</h5>
-    </div>
+  <div class="ticket-center ticket-bold" style="font-size:13px;">{{ factura.numero_factura }}</div>
+  <div class="ticket-center">{{ factura.fecha.strftime('%Y-%m-%d %H:%M') }}</div>
 
-    <div class="text-center mt-4 d-print-none">
-      <a href="{{ url_for('facturas.descargar_pdf', factura_id=factura.id) }}" class="btn btn-ideal">
-        <i class="fa-solid fa-file-pdf me-1"></i> Descargar PDF
-      </a>
-      <button onclick="window.print()" class="btn btn-ideal-outline">
-        <i class="fa-solid fa-print me-1"></i> Imprimir
-      </button>
-      <a href="{{ url_for('facturas.listar') }}" class="btn btn-light">Volver</a>
-    </div>
+  <div class="ticket-linea"></div>
+
+  <div><span class="ticket-bold">Cliente:</span> {{ factura.cliente }}</div>
+  <div><span class="ticket-bold">Vendedor:</span> {{ factura.vendedor_nombre or 'N/A' }} ({{ factura.vendedor_rol or '' }})</div>
+
+  <div class="ticket-linea"></div>
+
+  <table>
+    <tbody>
+      {% for it in factura.get('items', []) %}
+      <tr>
+        <td style="width:55%;">{{ it.producto_nombre }}</td>
+        <td style="text-align:center;">{{ it.cantidad }}x</td>
+        <td>${{ (it.precio * it.cantidad)|moneda }}</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="font-size:10px; color:#555; padding-bottom:4px;">
+          ${{ it.precio|moneda }} c/u
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="ticket-linea"></div>
+
+  <div class="ticket-row"><span>Subtotal:</span><span>${{ factura.subtotal|moneda }}</span></div>
+  {% if factura.descuento > 0 %}
+  <div class="ticket-row"><span>Descuento:</span><span>-${{ factura.descuento|moneda }}</span></div>
+  {% endif %}
+  <div class="ticket-linea"></div>
+  <div class="ticket-row ticket-total"><span>TOTAL:</span><span>${{ factura.total|moneda }}</span></div>
+  <div class="ticket-linea"></div>
+
+  <div class="ticket-center" style="margin-top:8px; font-size:11px;">
+    ¡Gracias por su compra!
   </div>
 </div>
 {% endblock %}
