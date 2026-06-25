@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Historial de ventas{% endblock %}
+{% block page_title %}Historial de ventas{% endblock %}
+
+{% block content %}
+<form class="d-flex gap-2 flex-wrap mb-3" method="GET">
+  <input type="text" name="q" value="{{ filtros.busqueda or '' }}" class="form-control" placeholder="Buscar por cliente..." style="max-width:220px;">
+  <input type="date" name="fecha_inicio" value="{{ filtros.fecha_inicio or '' }}" class="form-control" style="max-width:180px;">
+  <input type="date" name="fecha_fin" value="{{ filtros.fecha_fin or '' }}" class="form-control" style="max-width:180px;">
+  <button class="btn btn-ideal-outline"><i class="fa-solid fa-filter"></i> Filtrar</button>
+  <a href="{{ url_for('ventas.historial') }}" class="btn btn-light">Limpiar</a>
+</form>
+
+<div class="card-ideal">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+    <table class="table table-ideal mb-0 align-middle">
+      <thead>
+        <tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th><th class="text-end">Subtotal</th><th class="text-end">Descuento</th><th class="text-end">Total</th><th class="text-center">Acciones</th></tr>
+      </thead>
+      <tbody>
+        {% for v in ventas %}
+        <tr>
+          <td>#{{ v.id }}</td>
+          <td>{{ v.fecha.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ v.cliente }}</td>
+          <td>{{ v.vendedor or '—' }}</td>
+          <td class="text-end">${{ v.subtotal|moneda }}</td>
+          <td class="text-end">${{ v.descuento|moneda }}</td>
+          <td class="text-end fw-bold brand-text-rojo">${{ v.total|moneda }}</td>
+          <td class="text-center">
+            <a href="{{ url_for('ventas.detalle', venta_id=v.id) }}" class="btn btn-sm btn-outline-secondary">
+              <i class="fa-solid fa-eye"></i>
+            </a>
+            <a href="{{ url_for('facturas.ver_por_venta', venta_id=v.id) }}" class="btn btn-sm btn-outline-secondary">
+              <i class="fa-solid fa-file-invoice"></i>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No hay ventas registradas para este filtro.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

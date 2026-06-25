@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Salsa Ideal{% endblock %} | Sistema de Inventario</title>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img src="{{ url_for('static', filename='img/logo-ideal.png') }}" alt="Logo Ideal">
+      <span>Salsa Ideal</span>
+    </div>
+
+    <nav class="mt-2">
+      <a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+        <i class="fa-solid fa-gauge-high"></i> Dashboard
+      </a>
+
+      <div class="nav-section-title">Operación</div>
+      <a href="{{ url_for('inventario.listar') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('inventario.') %}active{% endif %}">
+        <i class="fa-solid fa-boxes-stacked"></i> Inventario
+      </a>
+      <a href="{{ url_for('ventas.nueva') }}" class="nav-link {% if request.endpoint == 'ventas.nueva' %}active{% endif %}">
+        <i class="fa-solid fa-cart-shopping"></i> Nueva venta
+      </a>
+      <a href="{{ url_for('ventas.historial') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('ventas.') and request.endpoint != 'ventas.nueva' %}active{% endif %}">
+        <i class="fa-solid fa-clock-rotate-left"></i> Historial de ventas
+      </a>
+      <a href="{{ url_for('facturas.listar') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('facturas.') %}active{% endif %}">
+        <i class="fa-solid fa-file-invoice"></i> Facturación
+      </a>
+
+      <div class="nav-section-title">Análisis</div>
+      <a href="{{ url_for('reportes.index') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('reportes.') %}active{% endif %}">
+        <i class="fa-solid fa-chart-pie"></i> Reportes
+      </a>
+
+      {% if session_rol == 'Administrador' %}
+      <div class="nav-section-title">Administración</div>
+      <a href="{{ url_for('usuarios.listar') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('usuarios.') %}active{% endif %}">
+        <i class="fa-solid fa-users-gear"></i> Usuarios
+      </a>
+      {% endif %}
+
+      <div class="nav-section-title">&nbsp;</div>
+      <a href="{{ url_for('auth.logout') }}" class="nav-link">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+      </a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="topbar">
+      <button class="btn btn-sm btn-light d-lg-none" onclick="document.getElementById('sidebar').classList.toggle('show')">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <h5 class="mb-0 d-none d-md-block">{% block page_title %}{% endblock %}</h5>
+      <div class="user-chip">
+        <i class="fa-solid fa-circle-user brand-text-verde"></i>
+        <span>{{ session_usuario }}</span>
+        <span class="badge bg-secondary">{{ session_rol }}</span>
+      </div>
+    </header>
+
+    <main class="content-area">
+      {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+          {% for categoria, mensaje in mensajes %}
+            <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+              {{ mensaje }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="app-footer">
+      &copy; {{ anio_actual }} {{ empresa_nombre }} — Sistema de Control de Inventario y Ventas
+    </footer>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

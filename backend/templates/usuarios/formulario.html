@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if usuario else 'Nuevo' }} usuario{% endblock %}
+{% block page_title %}{{ 'Editar usuario' if usuario else 'Nuevo usuario' }}{% endblock %}
+
+{% block content %}
+<div class="card-ideal" style="max-width:600px;">
+  <div class="card-body p-4">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Nombre completo</label>
+        <input type="text" name="nombre" class="form-control" required value="{{ usuario.nombre if usuario else '' }}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Nombre de usuario</label>
+        <input type="text" name="usuario" class="form-control" {% if usuario %}readonly{% endif %} required
+               value="{{ usuario.usuario if usuario else '' }}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">{{ 'Nueva contraseña (dejar vacío para no cambiar)' if usuario else 'Contraseña' }}</label>
+        <input type="password" name="contrasena" class="form-control" {% if not usuario %}required{% endif %}>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Rol</label>
+        <select name="rol" class="form-select">
+          <option value="Vendedor" {% if usuario and usuario.rol == 'Vendedor' %}selected{% endif %}>Vendedor (Inventario + Ventas)</option>
+          <option value="Administrador" {% if usuario and usuario.rol == 'Administrador' %}selected{% endif %}>Administrador (Acceso total)</option>
+        </select>
+      </div>
+
+      {% if usuario %}
+      <div class="form-check mb-3">
+        <input type="checkbox" name="activo" class="form-check-input" id="activo" {% if usuario.activo %}checked{% endif %}>
+        <label class="form-check-label" for="activo">Usuario activo</label>
+      </div>
+      {% endif %}
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-ideal px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Guardar</button>
+        <a href="{{ url_for('usuarios.listar') }}" class="btn btn-light">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

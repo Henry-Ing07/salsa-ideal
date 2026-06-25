@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Detalle de venta{% endblock %}
+{% block page_title %}Detalle de venta #{{ venta.id }}{% endblock %}
+
+{% block content %}
+<div class="card-ideal" style="max-width:780px;">
+  <div class="card-header d-flex justify-content-between">
+    <span>Venta #{{ venta.id }} — {{ venta.fecha.strftime('%Y-%m-%d %H:%M') }}</span>
+    <a href="{{ url_for('facturas.ver_por_venta', venta_id=venta.id) }}" class="btn btn-sm btn-ideal">
+      <i class="fa-solid fa-file-invoice me-1"></i> Ver factura
+    </a>
+  </div>
+  <div class="card-body">
+    <p><b>Cliente:</b> {{ venta.cliente }}</p>
+    <table class="table table-ideal">
+      <thead><tr><th>Producto</th><th class="text-center">Cantidad</th><th class="text-end">Precio</th><th class="text-end">Subtotal</th></tr></thead>
+      <tbody>
+        {% for it in items %}
+        <tr>
+          <td>{{ it.producto_nombre }}</td>
+          <td class="text-center">{{ it.cantidad }}</td>
+          <td class="text-end">${{ it.precio|moneda }}</td>
+          <td class="text-end">${{ (it.precio * it.cantidad)|moneda }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="text-end">
+      <p class="mb-1">Subtotal: ${{ venta.subtotal|moneda }}</p>
+      <p class="mb-1">Descuento: ${{ venta.descuento|moneda }}</p>
+      <h5 class="brand-text-rojo">Total: ${{ venta.total|moneda }}</h5>
+    </div>
+  </div>
+</div>
+{% endblock %}

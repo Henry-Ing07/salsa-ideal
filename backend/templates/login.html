@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión | Salsa Ideal</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="login-page">
+
+  <div class="login-card">
+    <img src="{{ url_for('static', filename='img/logo-ideal.png') }}" alt="Logo Salsa Ideal" class="logo">
+    <h4 class="text-center mb-1 fw-bold">Sistema de Inventario y Ventas</h4>
+    <p class="text-center text-muted mb-4">Salsa Marca Ideal</p>
+
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+      {% if mensajes %}
+        {% for categoria, mensaje in mensajes %}
+          <div class="alert alert-{{ categoria }} py-2">{{ mensaje }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <div class="mb-3">
+        <label class="form-label">Usuario</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+          <input type="text" name="usuario" class="form-control" placeholder="admin" required autofocus>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Contraseña</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+          <input type="password" name="contrasena" id="contrasena" class="form-control" placeholder="••••••••" required>
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePass()">
+            <i class="fa-solid fa-eye" id="icono-ojo"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-ideal w-100 py-2 mt-2">
+        <i class="fa-solid fa-right-to-bracket me-2"></i> Iniciar sesión
+      </button>
+    </form>
+
+  </div>
+
+  <script>
+    function togglePass() {
+      const input = document.getElementById('contrasena');
+      const icono = document.getElementById('icono-ojo');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icono.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icono.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+  </script>
+</body>
+</html>

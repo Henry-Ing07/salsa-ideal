@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if producto else 'Nuevo' }} producto{% endblock %}
+{% block page_title %}{{ 'Editar producto' if producto else 'Nuevo producto' }}{% endblock %}
+
+{% block content %}
+<div class="card-ideal" style="max-width:720px;">
+  <div class="card-body p-4">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Nombre del producto</label>
+        <input type="text" name="nombre" class="form-control" required
+               value="{{ producto.nombre if producto else '' }}">
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Categoría</label>
+          <input type="text" name="categoria" class="form-control" required
+                 value="{{ producto.categoria if producto else '' }}" placeholder="Ej: Picante, BBQ, Tomate...">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Precio ($)</label>
+          <input type="number" step="0.01" min="0" name="precio" class="form-control" required
+                 value="{{ producto.precio if producto else '' }}">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <textarea name="descripcion" class="form-control" rows="3">{{ producto.descripcion if producto else '' }}</textarea>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Stock actual</label>
+          <input type="number" min="0" name="stock" class="form-control" required
+                 value="{{ producto.stock if producto else 0 }}">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Stock mínimo</label>
+          <input type="number" min="0" name="stock_minimo" class="form-control" required
+                 value="{{ producto.stock_minimo if producto else 5 }}">
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-ideal px-4">
+          <i class="fa-solid fa-floppy-disk me-1"></i> Guardar
+        </button>
+        <a href="{{ url_for('inventario.listar') }}" class="btn btn-light">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

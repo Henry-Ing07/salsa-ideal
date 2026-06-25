@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Inventario{% endblock %}
+{% block page_title %}Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <form class="d-flex gap-2 flex-wrap" method="GET">
+    <input type="text" name="q" value="{{ busqueda }}" class="form-control" placeholder="Buscar producto..." style="max-width:240px;">
+    <select name="categoria" class="form-select" style="max-width:200px;">
+      <option value="">Todas las categorías</option>
+      {% for c in categorias %}
+        <option value="{{ c }}" {% if c == categoria_actual %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-ideal-outline"><i class="fa-solid fa-magnifying-glass"></i> Filtrar</button>
+  </form>
+  <a href="{{ url_for('inventario.nuevo') }}" class="btn btn-ideal">
+    <i class="fa-solid fa-plus me-1"></i> Nuevo producto
+  </a>
+</div>
+
+<div class="card-ideal">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+    <table class="table table-ideal mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>ID</th><th>Producto</th><th>Categoría</th><th class="text-end">Precio</th>
+          <th class="text-center">Stock</th><th class="text-center">Estado</th><th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+        {% set estado = estado_stock(p) %}
+        <tr>
+          <td>#{{ p.id }}</td>
+          <td><b>{{ p.nombre }}</b><div class="text-muted small">{{ p.descripcion[:60] }}</div></td>
+          <td>{{ p.categoria }}</td>
+          <td class="text-end">${{ p.precio|moneda }}</td>
+          <td class="text-center">{{ p.stock }}</td>
+          <td class="text-center">
+            {% if estado == 'agotado' %}
+              <span class="badge badge-stock-agotado">Agotado</span>
+            {% elif estado == 'bajo' %}
+              <span class="badge badge-stock-bajo">Bajo stock</span>
+            {% else %}
+              <span class="badge badge-stock-ok">Disponible</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <a href="{{ url_for('inventario.editar', id_producto=p.id) }}" class="btn btn-sm btn-outline-secondary">
+              <i class="fa-solid fa-pen"></i>
+            </a>
+            <form method="POST" action="{{ url_for('inventario.eliminar', id_producto=p.id) }}" class="d-inline"
+                  onsubmit="return confirm('¿Eliminar este producto del inventario?');">
+              <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">No se encontraron productos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

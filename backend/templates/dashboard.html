@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-sm-6">
+    <div class="kpi-card kpi-verde">
+      <i class="fa-solid fa-boxes-stacked kpi-icon"></i>
+      <div class="kpi-label">Total productos</div>
+      <div class="kpi-value">{{ total_productos }}</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="kpi-card kpi-mostaza">
+      <i class="fa-solid fa-triangle-exclamation kpi-icon"></i>
+      <div class="kpi-label">Productos con bajo stock</div>
+      <div class="kpi-value">{{ bajo_stock }}</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="kpi-card kpi-rojo">
+      <i class="fa-solid fa-cart-shopping kpi-icon"></i>
+      <div class="kpi-label">Ventas de hoy</div>
+      <div class="kpi-value">{{ ventas_dia.total }}</div>
+      <div class="small">${{ ventas_dia.ingresos|moneda }}</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="kpi-card kpi-gris">
+      <i class="fa-solid fa-sack-dollar kpi-icon"></i>
+      <div class="kpi-label">Ingresos del mes</div>
+      <div class="kpi-value">${{ ventas_mes.ingresos|moneda }}</div>
+      <div class="small">{{ ventas_mes.total }} ventas</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-7">
+    <div class="card-ideal">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-chart-line brand-text-verde me-2"></i>Ventas</span>
+        <select id="periodoChart" class="form-select form-select-sm" style="max-width:140px;" onchange="cargarGraficaVentas()">
+          <option value="semana">Esta semana</option>
+          <option value="mes">Este mes</option>
+          <option value="anio" selected>Este año</option>
+        </select>
+      </div>
+      <div class="card-body" style="position:relative;">
+        <canvas id="chartVentasMes" height="110"></canvas>
+        <p id="chart-sin-datos" class="text-muted text-center d-none" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">Sin ventas en este período</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card-ideal">
+      <div class="card-header"><i class="fa-solid fa-trophy brand-text-rojo me-2"></i>Productos más vendidos</div>
+      <div class="card-body"><canvas id="chartMasVendidos" height="110"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="card-ideal">
+  <div class="card-header"><i class="fa-solid fa-bell brand-text-rojo me-2"></i>Alertas de inventario</div>
+  <div class="card-body p-0">
+    {% if productos_bajo_stock %}
+    <table class="table table-ideal mb-0">
+      <thead><tr><th>Producto</th><th>Categoría</th><th class="text-center">Stock</th><th class="text-center">Mínimo</th><th class="text-center">Estado</th></tr></thead>
+      <tbody>
+      {% for p in productos_bajo_stock %}
+        <tr>
+          <td>{{ p.nombre }}</td>
+          <td>{{ p.categoria }}</td>
+          <td class="text-center">{{ p.stock }}</td>
+          <td class="text-center">{{ p.stock_minimo }}</td>
+          <td class="text-center">
+            {% if p.stock <= 0 %}
+              <span class="badge badge-stock-agotado">Agotado</span>
+            {% else %}
+              <span class="badge badge-stock-bajo">Bajo stock</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="text-muted p-3 mb-0">No hay alertas de inventario por el momento. ✅</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let chartVentas = null;
+const API_VENTAS_URL = "{{ url_for('dashboard.api_ventas_por_mes') }}";
+
+function cargarGraficaVentas() {
+  const periodo = document.getElementById('periodoChart').value;
+  const sinDatos = document.getElementById('chart-sin-datos');
+  const canvas = document.getElementById('chartVentasMes');
+
+  fetch(API_VENTAS_URL + '?periodo=' + periodo)
+    .then(r => {
+      if (!r.ok) return r.text().then(t => { throw new Error(r.status + ': ' + t.substring(0, 200)); });
+      return r.json();
+    })
+    .then(data => {
+      if (chartVentas) { chartVentas.destroy(); chartVentas = null; }
+
+      if (!data || data.length === 0) {
+        sinDatos.classList.remove('d-none');
+        return;
+      }
+
+      sinDatos.classList.add('d-none');
+
+      chartVentas = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.periodo),
+          datasets: [{
+            label: 'Ventas ($)',
+            data: data.map(d => d.total),
+            backgroundColor: 'rgba(226,52,43,.75)',
+            borderColor: '#E2342B',
+            borderWidth: 1,
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: v => '$' + v.toLocaleString('es-CO') }
+            }
+          }
+        }
+      });
+    })
+    .catch(err => {
+      console.error('Error gráfica ventas:', err);
+      sinDatos.textContent = 'Error al cargar datos.';
+      sinDatos.classList.remove('d-none');
+    });
+}
+
+cargarGraficaVentas();
+
+fetch("{{ url_for('dashboard.api_mas_vendidos') }}")
+  .then(r => r.json())
+  .then(data => {
+    new Chart(document.getElementById('chartMasVendidos'), {
+      type: 'doughnut',
+      data: {
+        labels: data.map(d => d.nombre),
+        datasets: [{
+          data: data.map(d => d.unidades),
+          backgroundColor: ['#1A7A4C', '#E2342B', '#E8A93B', '#6B7280', '#135C39'],
+        }]
+      },
+    });
+  });
+</script>
+{% endblock %}
