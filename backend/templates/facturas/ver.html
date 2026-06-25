@@ -68,7 +68,7 @@
       {% for it in factura.get('items', []) %}
       <tr>
         <td style="width:55%;">{{ it.producto_nombre }}</td>
-        <td style="text-align:center;">{{ it.cantidad }}x</td>
+        <td style="text-align:center;">{{ it.cantidad|float }}x</td>
         <td>${{ (it.precio * it.cantidad)|moneda }}</td>
       </tr>
       <tr>
