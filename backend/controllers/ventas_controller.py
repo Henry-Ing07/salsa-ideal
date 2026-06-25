@@ -30,7 +30,7 @@ class VentasController:
             producto = Producto.obtener_por_id(item["producto_id"])
             if not producto:
                 raise ValueError("Uno de los productos ya no existe.")
-            if producto["stock"] < item["cantidad"]:
+            if producto["stock"] < float(item["cantidad"]):
                 raise ValueError(
                     f"Stock insuficiente para '{producto['nombre']}'. "
                     f"Disponible: {producto['stock']}"

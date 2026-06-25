@@ -35,6 +35,12 @@
             <a href="{{ url_for('facturas.ver_por_venta', venta_id=v.id) }}" class="btn btn-sm btn-outline-secondary">
               <i class="fa-solid fa-file-invoice"></i>
             </a>
+            {% if session_rol == 'Administrador' %}
+            <form method="POST" action="{{ url_for('ventas.eliminar', venta_id=v.id) }}" class="d-inline"
+                  onsubmit="return confirm('¿Eliminar esta venta? Se restaurará el stock.');">
+              <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+            </form>
+            {% endif %}
           </td>
         </tr>
         {% else %}

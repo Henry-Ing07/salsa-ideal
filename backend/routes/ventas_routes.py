@@ -1,10 +1,11 @@
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 )
-from controllers.auth_controller import login_requerido
+from controllers.auth_controller import login_requerido, admin_requerido
 from controllers.ventas_controller import VentasController
 from controllers.inventario_controller import InventarioController
 from models.producto import Producto
+from models.venta import Venta
 
 ventas_bp = Blueprint("ventas", __name__)
 
@@ -63,3 +64,14 @@ def detalle(venta_id):
         flash("Venta no encontrada.", "warning")
         return redirect(url_for("ventas.historial"))
     return render_template("ventas/detalle.html", venta=venta, items=items)
+
+
+@ventas_bp.route("/ventas/<int:venta_id>/eliminar", methods=["POST"])
+@admin_requerido
+def eliminar(venta_id):
+    try:
+        Venta.eliminar(venta_id)
+        flash("Venta eliminada correctamente.", "success")
+    except Exception as e:
+        flash(f"Error al eliminar la venta: {e}", "danger")
+    return redirect(url_for("ventas.historial"))

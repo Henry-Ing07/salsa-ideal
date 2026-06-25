@@ -9,7 +9,7 @@ const Carrito = (function () {
         mostrarAlerta(`No hay suficiente stock de "${producto.nombre}".`);
         return;
       }
-      existente.cantidad += 1;
+      existente.cantidad = Math.round((existente.cantidad + 1) * 10) / 10;
     } else {
       if (producto.stock <= 0) {
         mostrarAlerta(`"${producto.nombre}" está agotado.`);
@@ -29,7 +29,7 @@ const Carrito = (function () {
   function cambiarCantidad(producto_id, delta) {
     const item = items.find((i) => i.producto_id === producto_id);
     if (!item) return;
-    const nueva = item.cantidad + delta;
+    const nueva = Math.round((item.cantidad + delta) * 10) / 10;
     if (nueva <= 0) {
       eliminar(producto_id);
       return;
@@ -40,6 +40,22 @@ const Carrito = (function () {
     }
     item.cantidad = nueva;
     render();
+  }
+
+  function setCantidad(producto_id, valor) {
+    const item = items.find((i) => i.producto_id === producto_id);
+    if (!item) return;
+    const nueva = Math.round(parseFloat(valor) * 10) / 10;
+    if (isNaN(nueva) || nueva <= 0) {
+      eliminar(producto_id);
+      return;
+    }
+    if (nueva > item.stock_max) {
+      mostrarAlerta(`Stock máximo disponible: ${item.stock_max}`);
+      return;
+    }
+    item.cantidad = nueva;
+    actualizarTotales();
   }
 
   function eliminar(producto_id) {
@@ -80,11 +96,17 @@ const Carrito = (function () {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${item.nombre}</td>
-        <td class="text-center">
+        <td class="text-center" style="min-width:130px;">
           <div class="d-flex align-items-center justify-content-center gap-1">
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="Carrito.cambiarCantidad(${item.producto_id}, -1)">-</button>
-            <span class="px-2">${item.cantidad}</span>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="Carrito.cambiarCantidad(${item.producto_id}, 1)">+</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="Carrito.cambiarCantidad(${item.producto_id}, -0.1)">-0.1</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="Carrito.cambiarCantidad(${item.producto_id}, -1)">-1</button>
+            <input type="number" min="0.1" step="0.1" value="${item.cantidad}"
+              class="form-control form-control-sm text-center px-1"
+              style="width:60px;"
+              onchange="Carrito.setCantidad(${item.producto_id}, this.value)"
+              oninput="Carrito.setCantidad(${item.producto_id}, this.value)">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="Carrito.cambiarCantidad(${item.producto_id}, 1)">+1</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="Carrito.cambiarCantidad(${item.producto_id}, 0.1)">+0.1</button>
           </div>
         </td>
         <td class="text-end">$${item.precio.toLocaleString("es-CO", {minimumFractionDigits: 2})}</td>
@@ -133,12 +155,11 @@ const Carrito = (function () {
     }
   }
 
-  return { agregar, cambiarCantidad, eliminar, vaciar, init };
+  return { agregar, cambiarCantidad, setCantidad, eliminar, vaciar, init };
 })();
 
 document.addEventListener("DOMContentLoaded", Carrito.init);
 
-// Filtro de búsqueda de productos en el catálogo del POS
 function filtrarProductosPOS() {
   const texto = document.getElementById("buscar-producto-pos").value.toLowerCase();
   document.querySelectorAll(".pos-product-card").forEach((card) => {

@@ -105,6 +105,26 @@ class Venta:
             conn.close()
 
     @staticmethod
+    def eliminar(venta_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                # Restaurar stock
+                cur.execute("SELECT producto_id, cantidad FROM detalle_ventas WHERE venta_id = %s", (venta_id,))
+                items = cur.fetchall()
+                for item in items:
+                    cur.execute("UPDATE productos SET stock = stock + %s WHERE id = %s",
+                                (item["cantidad"], item["producto_id"]))
+                cur.execute("DELETE FROM facturas WHERE venta_id = %s", (venta_id,))
+                cur.execute("DELETE FROM ventas WHERE id = %s", (venta_id,))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+    @staticmethod
     def ventas_del_dia():
         conn = get_connection()
         try:

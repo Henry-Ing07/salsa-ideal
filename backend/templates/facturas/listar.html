@@ -22,6 +22,12 @@
             <a href="{{ url_for('facturas.descargar_pdf', factura_id=f.id) }}" class="btn btn-sm btn-outline-danger">
               <i class="fa-solid fa-file-pdf"></i> PDF
             </a>
+            {% if session_rol == 'Administrador' %}
+            <form method="POST" action="{{ url_for('facturas.eliminar', factura_id=f.id) }}" class="d-inline"
+                  onsubmit="return confirm('¿Eliminar esta factura y su venta? Se restaurará el stock.');">
+              <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+            </form>
+            {% endif %}
           </td>
         </tr>
         {% else %}
