@@ -2,5 +2,5 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "gunicorn wsgi:application --bind 0.0.0.0:$PORT"
+startCommand = "gunicorn --bind 0.0.0.0:$PORT --chdir backend wsgi:application"
 restartPolicyType = "ON_FAILURE"
